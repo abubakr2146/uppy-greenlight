@@ -8,8 +8,8 @@ WORKDIR /app
 # Copy package files first to leverage Docker cache
 COPY package*.json .
 
-# Install dependencies
-RUN npm ci
+# Install dependencies (use legacy-peer-deps to handle Uppy version conflicts)
+RUN npm ci --legacy-peer-deps
 
 # Copy all other files
 COPY . .
@@ -17,19 +17,15 @@ COPY . .
 # Build the application (now Vite will see env vars)
 RUN npm run build
 
-# Stage 2: Serve the application using Express server
-FROM node:18-alpine
+# Stage 2: Serve with Nginx
+FROM nginx:alpine
 
-WORKDIR /app
+# Copy built assets from builder
+COPY --from=builder /app/build /usr/share/nginx/html
 
-# Copy built assets and server files from builder
-COPY --from=builder /app/dist ./dist
-COPY --from=builder /app/server.js ./server.js
-COPY --from=builder /app/package*.json ./
+# Copy nginx configuration
+COPY nginx.conf /etc/nginx/conf.d/default.conf
 
-# Install production dependencies
-RUN npm ci --only=production
+EXPOSE 80
 
-EXPOSE 3000
-
-CMD ["npm", "start"]
+CMD ["nginx", "-g", "daemon off;"]

@@ -1,0 +1,648 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Uppy File Uploader</title>
+    
+    <!-- Uppy CSS -->
+    <link href="https://releases.transloadit.com/uppy/v3.25.0/uppy.min.css" rel="stylesheet">
+    
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        .header {
+            text-align: center;
+            color: white;
+            margin-bottom: 40px;
+            padding: 20px;
+        }
+
+        .header h1 {
+            font-size: 3rem;
+            margin-bottom: 10px;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.2);
+        }
+
+        .header p {
+            font-size: 1.2rem;
+            opacity: 0.9;
+        }
+
+        .upload-section {
+            background: white;
+            border-radius: 20px;
+            padding: 40px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+        }
+
+        #drag-drop-area {
+            margin-bottom: 30px;
+        }
+
+        .info-section {
+            background: #f8f9fa;
+            border-radius: 10px;
+            padding: 20px;
+            margin-top: 30px;
+        }
+
+        .info-section h3 {
+            color: #667eea;
+            margin-bottom: 15px;
+        }
+
+        .info-section ul {
+            list-style: none;
+            padding-left: 0;
+        }
+
+        .info-section li {
+            padding: 8px 0;
+            color: #555;
+        }
+
+        .info-section li::before {
+            content: "✓ ";
+            color: #667eea;
+            font-weight: bold;
+            margin-right: 8px;
+        }
+
+        .stats {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 20px;
+            margin-top: 20px;
+        }
+
+        .stat-card {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 20px;
+            border-radius: 10px;
+            text-align: center;
+        }
+
+        .stat-card h4 {
+            font-size: 0.9rem;
+            opacity: 0.9;
+            margin-bottom: 10px;
+        }
+
+        .stat-card p {
+            font-size: 2rem;
+            font-weight: bold;
+        }
+
+        .footer {
+            text-align: center;
+            color: white;
+            margin-top: 40px;
+            opacity: 0.8;
+        }
+
+        /* Uploaded Files Section */
+        .uploaded-files-section {
+            background: white;
+            border-radius: 20px;
+            padding: 40px;
+            margin-top: 30px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+        }
+
+        .uploaded-files-section h2 {
+            color: #667eea;
+            margin-bottom: 20px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .files-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+            gap: 20px;
+            margin-top: 20px;
+        }
+
+        .file-card {
+            background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+            border-radius: 15px;
+            padding: 20px;
+            transition: transform 0.3s, box-shadow 0.3s;
+            cursor: pointer;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .file-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+        }
+
+        .file-card.image {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+        }
+
+        .file-card.video {
+            background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+            color: white;
+        }
+
+        .file-card.audio {
+            background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
+            color: white;
+        }
+
+        .file-card.document {
+            background: linear-gradient(135deg, #43e97b 0%, #38f9d7 100%);
+            color: white;
+        }
+
+        .file-preview {
+            width: 100%;
+            height: 180px;
+            background: rgba(255,255,255,0.1);
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-bottom: 15px;
+            overflow: hidden;
+        }
+
+        .file-preview img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+
+        .file-preview .icon {
+            font-size: 4rem;
+            opacity: 0.7;
+        }
+
+        .file-info {
+            margin-top: 10px;
+        }
+
+        .file-name {
+            font-weight: 600;
+            margin-bottom: 5px;
+            word-break: break-word;
+            font-size: 1rem;
+        }
+
+        .file-meta {
+            display: flex;
+            justify-content: space-between;
+            font-size: 0.85rem;
+            opacity: 0.8;
+            margin-top: 8px;
+        }
+
+        .file-actions {
+            display: flex;
+            gap: 10px;
+            margin-top: 15px;
+        }
+
+        .file-actions button {
+            flex: 1;
+            padding: 8px 12px;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: 500;
+            transition: all 0.3s;
+            background: rgba(255,255,255,0.2);
+            color: inherit;
+        }
+
+        .file-actions button:hover {
+            background: rgba(255,255,255,0.3);
+            transform: scale(1.05);
+        }
+
+        .no-files {
+            text-align: center;
+            padding: 60px 20px;
+            color: #999;
+        }
+
+        .no-files .icon {
+            font-size: 4rem;
+            margin-bottom: 20px;
+            opacity: 0.3;
+        }
+
+        .clear-all-btn {
+            background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 10px;
+            cursor: pointer;
+            font-weight: 600;
+            margin-top: 20px;
+            transition: transform 0.3s;
+        }
+
+        .clear-all-btn:hover {
+            transform: scale(1.05);
+        }
+
+        .file-timestamp {
+            font-size: 0.75rem;
+            opacity: 0.7;
+            margin-top: 5px;
+        }
+
+        @media (max-width: 768px) {
+            .header h1 {
+                font-size: 2rem;
+            }
+            
+            .upload-section,
+            .uploaded-files-section {
+                padding: 20px;
+            }
+
+            .files-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🚀 Uppy File Uploader</h1>
+            <p>Upload files with ease using drag & drop, webcam, or URL import</p>
+        </div>
+
+        <div class="upload-section">
+            <div id="drag-drop-area"></div>
+
+            <div class="info-section">
+                <h3>📋 Features</h3>
+                <ul>
+                    <li>Drag and drop files from your computer</li>
+                    <li>Import files from URL</li>
+                    <li>Take photos with webcam</li>
+                    <li>Record video and audio</li>
+                    <li>Multiple file uploads</li>
+                    <li>Resume uploads if connection fails</li>
+                </ul>
+            </div>
+
+            <div class="stats">
+                <div class="stat-card">
+                    <h4>Files Uploaded</h4>
+                    <p id="files-uploaded">0</p>
+                </div>
+                <div class="stat-card">
+                    <h4>Total Size</h4>
+                    <p id="total-size">0 MB</p>
+                </div>
+                <div class="stat-card">
+                    <h4>Success Rate</h4>
+                    <p id="success-rate">100%</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Uploaded Files Section -->
+        <div class="uploaded-files-section">
+            <h2>
+                📁 Uploaded Files
+                <span style="font-size: 1rem; opacity: 0.7; margin-left: auto;">(<span id="total-files-count">0</span> files)</span>
+            </h2>
+            
+            <div id="files-container">
+                <div class="no-files">
+                    <div class="icon">📭</div>
+                    <p>No files uploaded yet. Start uploading to see them here!</p>
+                </div>
+            </div>
+
+            <button class="clear-all-btn" id="clear-all-btn" style="display: none;">
+                🗑️ Clear All Files
+            </button>
+        </div>
+
+        <div class="footer">
+            <p>Powered by Uppy • Your Companion: http://168.231.74.150:3020</p>
+        </div>
+    </div>
+
+    <!-- Uppy JavaScript -->
+    <script type="module">
+        import { Uppy, Dashboard, Webcam, Audio, ScreenCapture, ImageEditor, Url, Tus } from "https://releases.transloadit.com/uppy/v3.25.0/uppy.min.mjs"
+
+        // Statistics
+        let filesUploaded = 0;
+        let totalSize = 0;
+        let successfulUploads = 0;
+        let totalAttempts = 0;
+
+        // Uploaded files storage
+        let uploadedFiles = JSON.parse(localStorage.getItem('uploadedFiles')) || [];
+
+        // Load uploaded files on page load
+        window.addEventListener('DOMContentLoaded', () => {
+            renderUploadedFiles();
+            updateFileCount();
+        });
+
+        // Render uploaded files
+        function renderUploadedFiles() {
+            const container = document.getElementById('files-container');
+            const clearBtn = document.getElementById('clear-all-btn');
+
+            if (uploadedFiles.length === 0) {
+                container.innerHTML = `
+                    <div class="no-files">
+                        <div class="icon">📭</div>
+                        <p>No files uploaded yet. Start uploading to see them here!</p>
+                    </div>
+                `;
+                clearBtn.style.display = 'none';
+                return;
+            }
+
+            clearBtn.style.display = 'block';
+            
+            const filesHTML = uploadedFiles.map(file => {
+                const fileType = getFileType(file.type);
+                const fileIcon = getFileIcon(fileType);
+                const formattedSize = formatFileSize(file.size);
+                const timestamp = new Date(file.uploadedAt).toLocaleString();
+
+                return `
+                    <div class="file-card ${fileType}" data-file-id="${file.id}">
+                        <div class="file-preview">
+                            ${file.isImage ? 
+                                `<img src="${file.url}" alt="${file.name}" onerror="this.style.display='none'; this.parentElement.innerHTML='<div class=\\'icon\\'>${fileIcon}</div>'">` : 
+                                `<div class="icon">${fileIcon}</div>`
+                            }
+                        </div>
+                        <div class="file-info">
+                            <div class="file-name">${file.name}</div>
+                            <div class="file-meta">
+                                <span>${formattedSize}</span>
+                                <span>${fileType.toUpperCase()}</span>
+                            </div>
+                            <div class="file-timestamp">${timestamp}</div>
+                        </div>
+                        <div class="file-actions">
+                            <button onclick="viewFile('${file.url}')" title="View file">
+                                👁️ View
+                            </button>
+                            <button onclick="downloadFile('${file.url}', '${file.name}')" title="Download file">
+                                ⬇️ Download
+                            </button>
+                            <button onclick="deleteFile('${file.id}')" title="Delete file">
+                                🗑️ Delete
+                            </button>
+                        </div>
+                    </div>
+                `;
+            }).join('');
+
+            container.innerHTML = `<div class="files-grid">${filesHTML}</div>`;
+        }
+
+        // Get file type from MIME type
+        function getFileType(mimeType) {
+            if (!mimeType) return 'document';
+            if (mimeType.startsWith('image/')) return 'image';
+            if (mimeType.startsWith('video/')) return 'video';
+            if (mimeType.startsWith('audio/')) return 'audio';
+            return 'document';
+        }
+
+        // Get file icon based on type
+        function getFileIcon(type) {
+            const icons = {
+                'image': '🖼️',
+                'video': '🎥',
+                'audio': '🎵',
+                'document': '📄'
+            };
+            return icons[type] || '📄';
+        }
+
+        // Format file size
+        function formatFileSize(bytes) {
+            if (bytes === 0) return '0 B';
+            const k = 1024;
+            const sizes = ['B', 'KB', 'MB', 'GB'];
+            const i = Math.floor(Math.log(bytes) / Math.log(k));
+            return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
+        }
+
+        // View file in new tab
+        window.viewFile = function(url) {
+            window.open(url, '_blank');
+        }
+
+        // Download file
+        window.downloadFile = function(url, filename) {
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = filename;
+            a.target = '_blank';
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+        }
+
+        // Delete file
+        window.deleteFile = function(fileId) {
+            if (confirm('Are you sure you want to delete this file?')) {
+                uploadedFiles = uploadedFiles.filter(f => f.id !== fileId);
+                localStorage.setItem('uploadedFiles', JSON.stringify(uploadedFiles));
+                renderUploadedFiles();
+                updateFileCount();
+                updateStats();
+            }
+        }
+
+        // Clear all files
+        document.getElementById('clear-all-btn').addEventListener('click', () => {
+            if (confirm('Are you sure you want to clear all uploaded files?')) {
+                uploadedFiles = [];
+                localStorage.setItem('uploadedFiles', JSON.stringify(uploadedFiles));
+                renderUploadedFiles();
+                updateFileCount();
+                filesUploaded = 0;
+                totalSize = 0;
+                updateStats();
+            }
+        });
+
+        // Update file count
+        function updateFileCount() {
+            document.getElementById('total-files-count').textContent = uploadedFiles.length;
+        }
+
+        // Initialize Uppy
+        const uppy = new Uppy({
+            debug: true,
+            autoProceed: false,
+            restrictions: {
+                maxFileSize: 1024 * 1024 * 1024, // 1GB
+                maxNumberOfFiles: 10,
+                allowedFileTypes: null // Allow all file types
+            }
+        })
+        .use(Dashboard, {
+            inline: true,
+            target: '#drag-drop-area',
+            showProgressDetails: true,
+            note: 'Files up to 1GB • Max 10 files',
+            height: 470,
+            metaFields: [
+                { id: 'name', name: 'Name', placeholder: 'File name' },
+                { id: 'caption', name: 'Caption', placeholder: 'Describe what this file is about' }
+            ],
+            proudlyDisplayPoweredByUppy: false,
+            theme: 'auto'
+        })
+        .use(Webcam, {
+            target: Dashboard,
+            modes: ['picture', 'video'],
+            mirror: true,
+            facingMode: 'user',
+            showRecordingLength: true
+        })
+        .use(Audio, {
+            target: Dashboard,
+            showRecordingLength: true
+        })
+        .use(ScreenCapture, {
+            target: Dashboard
+        })
+        .use(ImageEditor, {
+            target: Dashboard
+        })
+        .use(Url, {
+            target: Dashboard,
+            companionUrl: 'http://168.231.74.150:3020'
+        })
+        .use(Tus, {
+            endpoint: 'https://tusd.tusdemo.net/files/', // Demo endpoint - replace with your own
+            retryDelays: [0, 1000, 3000, 5000],
+            limit: 5
+        })
+
+        // Event: File added
+        uppy.on('file-added', (file) => {
+            console.log('File added:', file.name)
+        })
+
+        // Event: Upload started
+        uppy.on('upload', (data) => {
+            console.log('Upload started:', data)
+        })
+
+        // Event: Upload progress
+        uppy.on('upload-progress', (file, progress) => {
+            console.log(`${file.name}: ${progress.bytesUploaded}/${progress.bytesTotal}`)
+        })
+
+        // Event: Upload success
+        uppy.on('upload-success', (file, response) => {
+            console.log('Upload success:', file.name, response)
+            filesUploaded++
+            totalSize += file.size
+            successfulUploads++
+            totalAttempts++
+            
+            // Save uploaded file to localStorage and display
+            const uploadedFile = {
+                id: file.id || Date.now().toString(),
+                name: file.name,
+                size: file.size,
+                type: file.type,
+                url: response.uploadURL || response.url || '#',
+                uploadedAt: new Date().toISOString(),
+                isImage: file.type && file.type.startsWith('image/')
+            };
+
+            uploadedFiles.unshift(uploadedFile); // Add to beginning
+            localStorage.setItem('uploadedFiles', JSON.stringify(uploadedFiles));
+            
+            renderUploadedFiles();
+            updateFileCount();
+            updateStats();
+        })
+
+        // Event: Upload error
+        uppy.on('upload-error', (file, error, response) => {
+            console.error('Upload error:', file.name, error)
+            totalAttempts++
+            updateStats()
+        })
+
+        // Event: Complete
+        uppy.on('complete', (result) => {
+            console.log('Upload complete! Files:', result.successful)
+            console.log('Failed files:', result.failed)
+            
+            if (result.successful.length > 0) {
+                // Show success message
+                const message = result.successful.length === 1 
+                    ? `✅ Successfully uploaded "${result.successful[0].name}"!` 
+                    : `✅ Successfully uploaded ${result.successful.length} file(s)!`;
+                alert(message);
+                
+                // Scroll to uploaded files section
+                setTimeout(() => {
+                    document.querySelector('.uploaded-files-section').scrollIntoView({ 
+                        behavior: 'smooth', 
+                        block: 'start' 
+                    });
+                }, 500);
+            }
+            
+            if (result.failed.length > 0) {
+                alert(`❌ ${result.failed.length} file(s) failed to upload.`)
+            }
+        })
+
+        // Update statistics
+        function updateStats() {
+            document.getElementById('files-uploaded').textContent = filesUploaded
+            document.getElementById('total-size').textContent = (totalSize / (1024 * 1024)).toFixed(2) + ' MB'
+            
+            const successRate = totalAttempts > 0 ? (successfulUploads / totalAttempts * 100).toFixed(0) : 100
+            document.getElementById('success-rate').textContent = successRate + '%'
+        }
+
+        // Log Uppy info
+        console.log('Uppy initialized!')
+        console.log('Companion URL:', 'http://168.231.74.150:3020')
+        console.log('Available plugins:', uppy.getPlugin('Dashboard'))
+    </script>
+</body>
+</html>

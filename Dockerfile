@@ -1,31 +1,35 @@
-# Build stage
-FROM node:18-alpine as build
+# Stage 1: Build the application
+FROM node:18 AS builder
 
 WORKDIR /app
 
-# Copy package files
-COPY package*.json ./
+
+
+# Copy package files first to leverage Docker cache
+COPY package*.json .
 
 # Install dependencies
-RUN npm install --legacy-peer-deps
+RUN npm ci
 
-# Copy source code
+# Copy all other files
 COPY . .
 
-# Build the app
+# Build the application (now Vite will see env vars)
 RUN npm run build
 
-# Production stage
-FROM nginx:alpine
+# Stage 2: Serve the application using Express server
+FROM node:18-alpine
 
-# Copy custom nginx config
-COPY nginx.conf /etc/nginx/conf.d/default.conf
+WORKDIR /app
 
-# Copy built files from build stage
-COPY --from=build /app/build /usr/share/nginx/html
+# Copy built assets and server files from builder
+COPY --from=builder /app/dist ./dist
+COPY --from=builder /app/server.js ./server.js
+COPY --from=builder /app/package*.json ./
 
-# Expose port 80
-EXPOSE 80
+# Install production dependencies
+RUN npm ci --only=production
 
-# Start nginx
-CMD ["nginx", "-g", "daemon off;"]
+EXPOSE 3000
+
+CMD ["npm", "start"]
